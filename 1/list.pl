@@ -3,6 +3,7 @@ reverse([], []).
 reverse([H|T], Y) :- reverse(T,Tp), append(Tp, [H], Y).
 
 % zadanie 5
+% bledy w predykacie prefix
 % dane:
 prefix([],_).
 prefix([H|Xs],[H|Ys]) :- prefix(Xs,Ys).
@@ -35,3 +36,9 @@ writeLisp(A) :- atomic(A), write(A).
 writeLisp(F) :- F =.. [H|T], T=[_|_], writef("("), write(H), writeLispList(T), writef(")").
 writeLispList([]).
 writeLispList([H|T]) :- writef(" "), writeLisp(H), writeLispList(T).
+
+% 7 shuffle_term
+% w przykladzie jest blad: tam sa dowolne permutacje dzieci?
+shuffle_term(X,Y):- X=..[H|T], shuffle_term_list(T, Tp), Y=..[H|Tp].
+shuffle_term_list(As, Bs) :- append(I, [X|T], As), append(Ip, [Y|Tp], T), append(Ip, [X|Tp], Tpp), append(I, [Y|Tpp], Bs).
+shuffle_term_list(A, B) :- append(Hs,[H|T],A), shuffle_term(H,Hp), append(Hs,[Hp|T],B).
