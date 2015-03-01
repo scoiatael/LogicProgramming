@@ -29,3 +29,10 @@ adjacent_append(X, Y, L) :- append(_, [X,Y | _], L).
 
 % f) last za pomocą append
 last_append(X,L) :- append(_, [X], L).
+
+% 6 writeLisp
+writeLisp(F) :- flattenLisp(F, Fp), write(Fp).
+flattenLisp(A, A) :- atomic(A).
+flattenLisp(F, (H,Tp)) :- F =.. [H|T], T=[_|_], flattenLispList(T, Tp).
+flattenLispList([],[]).
+flattenLispList([H|T], [Hp|Tp]) :- flattenLisp(H, Hp), flattenLispList(T,Tp).
