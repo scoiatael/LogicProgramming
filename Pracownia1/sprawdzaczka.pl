@@ -101,7 +101,7 @@ goodSpeed(mysort,0.09).
 goodSpeed(sum_list,0.00001).
 goodSpeed(permy,0.00001).
 goodSpeed(occur,0.00001).
-goodSpeed(copyterm,0.0000001).
+goodSpeed(term,0.0000001).
 %%%%%%%%%%%%%% KONIEC DEFINICJI LISTY %%%%%%%%%%%%
 %%%%%%%%%%%%%% Obliczanie oceny %%%%%%%%%%%%%%%%%%
 potega(_,0,1).
