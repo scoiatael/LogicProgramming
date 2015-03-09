@@ -1,7 +1,7 @@
 % vi: syntax=prolog, filetype=prolog
 
-term(Sig, Term, Size) :- var(Term), !, build_term(Sig, Size, Term, 0, Size).
-term(Sig, Term, Size) :- term_aux(Sig, SizeNew, Term, 0), Size = SizeNew.
+term(Sig, Size, Term) :- var(Term), !, build_term(Sig, Size, Term, 0, Size).
+term(Sig, Size, Term) :- term_aux(Sig, SizeNew, Term, 0), Size = SizeNew.
 
 term_aux(Sig, Size, F, SizeP) :-
   F =.. [H|T],

@@ -14,6 +14,7 @@
 %  nl
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Predykaty obliczające prędkość komputera
+%
 del(X,[X|Xs],Xs).
 del(X,[Y|Ys],[Y|Xs]):-
   del(X,Ys,Xs).
@@ -53,6 +54,7 @@ speed(V) :-
   V is (V1+V2+V3+V4+V5)/5.0.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Predykaty obliczające wielkość pliku
+%
 special('!',5).    % Dobrane ad hoc, mogą się zmienić dla dalszych list
 special(';',3).    % Mogą tu pojawić się też inne.
 special('->',5).
@@ -89,6 +91,7 @@ pkt(sum_list,1,0,0.05).
 pkt(occur,1,0,0.05).
 pkt(permy,0.01,0,0.05).
 pkt(term,2,0,0.05).
+pkt(multiset,2,0,0.05).
 goodSize(sum_list,29).
 goodSize(permy,53).
 goodSize(occur,59).
@@ -97,11 +100,12 @@ goodSize(saryt,120).
 goodSize(mysort,85).
 goodSize(multiset,79).
 goodSpeed(multiset,0.09).
-goodSpeed(mysort,0.09).
 goodSpeed(sum_list,0.00001).
 goodSpeed(permy,0.00001).
 goodSpeed(occur,0.00001).
-goodSpeed(term,0.0000001).
+goodSpeed(copyterm,0.0000001).
+goodSpeed(term, 0.0015).
+goodSpeed(mysort, 0.005).
 %%%%%%%%%%%%%% KONIEC DEFINICJI LISTY %%%%%%%%%%%%
 %%%%%%%%%%%%%% Obliczanie oceny %%%%%%%%%%%%%%%%%%
 potega(_,0,1).
@@ -142,7 +146,7 @@ evaluate([Z|Zs],AP,P) :-
   [Z],
   speed(Scale),
   te(Testy, Errors, Time),
-  fileSize(Z,Size), %write(Size),nl,
+  fileSize(Z,Size), %write(Time),nl,
   ocena(Z,Errors,Time*Scale,Size,PP),  % Wypisuje raport
   AP1 is AP+PP,
   evaluate(Zs,AP1,P).
@@ -209,15 +213,16 @@ prepareTests(multiset,T) :-
   ].
 prepareTests(term, Tests) :-
   Tests = [
-      \+ term([a/0,b/0,c/0], _, 2),
-      (findall(T, term([a/0,b/0,c/0], T, 1), Ts), length(Ts,3)),
-      (findall(T, term([a/0,b/0,f/5], T, 6), Ts2), length(Ts2,32)),
-      \+ term([a/0,b/2], a+a, 3),
-      (term([(+)/2, (*)/2, 1/0, 2/0, 3/0], 1+2*3,  R1), R1 = 5),
-      (term([(+)/2, (*)/2, 1/0, 2/0, 3/0], (1+2)*3,  R2), R2 = 5)
+      \+ term([a/0,b/0,c/0], 2, _),
+      (findall(T, term([a/0,b/0,c/0], 1, T), Ts), length(Ts,3)),
+      (findall(T, term([a/0,b/0,f/5], 6, T), Ts2), length(Ts2,32)),
+      \+ term([a/0,b/2], 3,  a+a),
+      (term([(+)/2, (*)/2, 1/0, 2/0, 3/0], R1, 1+2*3), R1 = 5),
+      (term([(+)/2, (*)/2, 1/0, 2/0, 3/0], R2, (1+2)*3), R2 = 5)
   ].
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Mierzenie czasu i sprawdzanie błędów
+%
 countErrors([],_,N,N).
 countErrors([T|Ts],Licznik,N,W) :-
   ( T -> N1=N, write(Licznik - ok),nl ;
@@ -287,10 +292,10 @@ eqmsets(A,B) :-
   msort(AL,Sorted),
   msort(BL,Sorted).
 %-------------------------------------------------
-:- write(' Wersja testow z 4 marca 2015'), nl.
+:- nl.
+:- write(' Wersja testow z 9 marca 2015'), nl.
 :- write(' W kartotece, w ktorej uruchamia sie program powinny znajdowac sie pliki '), nl.
 :- write('    saryt.pl,  permy.pl (za prawie zero)'), nl.
-:- write('    sum_list.pl, occur.pl, mysort.pl, multiset.pl, term'), nl.
+:- write('    sum_list.pl, occur.pl, mysort.pl, multiset.pl, term'), nl,nl.
 :- write(' Uruchamianie: evaluate(lista nazw rozwiazanych zadan)'),nl.
-:- write('  np: evaluate([permy, sum_list])'),nl.
-%:-write(' Ostatnie zmiany: Informacja na stronie wykładu'),nl.
+:- write('  np: evaluate([permy, sum_list])'),nl,nl.
