@@ -52,9 +52,15 @@ map_cluster([], []).
 map_cluster([X|Y], [Xp|Yp]) :- cluster(X, Xp), map_cluster(Y, Yp).
 
 fold_cluster((-), X, F) :- cluster_num((-), X, Xp, Y), F = [ Xp | Y].
-fold_cluster((*), X, F) :- cluster_num((*), X, Xp, Y), (Xp = 1, !, F = Y; F = [ Xp | Y]).
-fold_cluster((+), X, F) :- cluster_num((+), X, Xp, Y), cluster_vars(Y, Yp), (Xp = 0, !, F = Yp; F = [Xp | Yp]).
+fold_cluster((*), X, F) :- cluster_num((*), X, Xp, Y), crunch_factors(1, Xp, Y, F).
+fold_cluster((+), X, F) :- cluster_num((+), X, Xp, Y), cluster_vars(Y, Yp), crunch_factors(0, Xp, Yp, F).
+
+crunch_factors(ZValue, ZValue, [], [ZValue]) :- !.
+crunch_factors(ZValue, ZValue, Vars, Vars) :- !.
+crunch_factors(_, Num, Vars, [Num | Vars]) :- !.
+
 cluster_num(Op, X, Y, Z) :- take_numbers(X, Xp, Z), eval_list(Op, Xp, Y).
+
 eval_list((+), [], 0).
 eval_list((*), [], 1).
 eval_list((-), [H|T], S) :- eval_list((-), H, T, S).
@@ -111,7 +117,7 @@ elim_singleton([R], R) :- !.
 elim_singleton(R, R).
 
 find_common(_, T, [], T).
-find_common(A, [H|T], [Rp|C], D) :- H =.. [(*) | Args], select(A, Args, R), elim_singleton(R, Rp), find_common(A, T, C, D).
+find_common(A, [H|T], [Rp|C], D) :- H =.. [(*) | Args], select(A, Args, R), elim_singleton_op((*), R, Rp), find_common(A, T, C, D).
 
 find_best(Opts, Best) :- map_term_size(Opts, Optsp), find_shortest(Optsp, _-Best).
 
