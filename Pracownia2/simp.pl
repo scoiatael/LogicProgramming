@@ -2,9 +2,17 @@
 
 simp(St, Y) :- prepare(St, X), findall(Z, simplify(X, Z), B), find_best(B, Best), convert_back(Best, Y).
 
-prepare(X, Y) :- elim_minus(X, Z, 1), push_to_common_root(Z, Y).
+prepare(X, Y) :- elim_minus(X, Z, 1), push_to_common_root(Z, Y), !.
 
-simplify(X, Z) :- push_to_common_root(X, Xp), sort_tree(Xp, Xpp), cluster(Xpp, Xppp), distribute(Xppp, Y), ( \+ X = Y, simplify(Y, Z); Y = Z).
+simplify(X, Z) :-
+  push_to_common_root(X, Xp),
+  sort_tree(Xp, Xpp),
+  cluster(Xpp, Xppp),
+  distribute(Xppp, Y),
+  loop_simplify(X, Y, Z).
+
+loop_simplify(X, Y, Z) :- \+ X=Y, !, simplify(Y, Z).
+loop_simplify(X, X, X) :- !.
 
 elim_minus(X, X, 1) :- atomic(X), !.
 elim_minus(X, F, -1) :- atom(X), !, F =.. [(*), -1, X].
@@ -34,7 +42,11 @@ map_sort_tree([], []).
 map_sort_tree([X|Y], [Xp|Yp]) :- sort_tree(X, Xp), map_sort_tree(Y, Yp).
 
 cluster(X, X) :- atomic(X), !.
-cluster(F, Fp) :- F =.. [Op | Li], map_cluster(Li, Lip), fold_cluster(Op, Lip, Lipp), elim_singleton_op(Op, Lipp, Fp).
+cluster(F, Fp) :-
+  F =.. [Op | Li],
+  map_cluster(Li, Lip),
+  fold_cluster(Op, Lip, Lipp),
+  elim_singleton_op(Op, Lipp, Fp), !.
 
 map_cluster([], []).
 map_cluster([X|Y], [Xp|Yp]) :- cluster(X, Xp), map_cluster(Y, Yp).
@@ -64,7 +76,7 @@ distribute(X, X) :- atomic(X), !.
 distribute(F, Fp) :-
   F =.. [Op | Li],
   map_distribute(Li, Lip),
-  (Op = (+),
+  (member(Op, [(+)]),
     group_by_common_factor(Lip, Lipp),
     \+ Lip = Lipp,
     elim_singleton_op(Op, Lipp,  Fpp),
@@ -80,16 +92,21 @@ map_distribute([H|T], [Hp|Tp]) :- distribute(H, Hp), map_distribute(T, Tp).
 
 group_by_common_factor([], []).
 group_by_common_factor([H|T], [Lpp | D]) :-
-  H=.. [Op | Args],
-  Op = (*),
-  select(A, Args, R),
-  elim_singleton(R, Rp),
+  select_arg(H, A, R),
   find_common(A, T, C, D),
   \+ C = [],
-  Fac =.. [(+), Rp | C],
+  Fac =.. [(+), R | C],
   Mult =.. [(*), A, Fac],
   elim_singleton_op((+), [Mult | D], Lpp).
-group_by_common_factor([H|T], [H | D]) :- group_by_common_factor(T, D).
+group_by_common_factor([H|T], [H|D]) :- group_by_common_factor(T, D).
+
+select_arg(H, Arg, Rest) :-
+  H=.. [Op | Args],
+  \+ Args = [],
+  Op = (*),
+  select(Arg, Args, R),
+  elim_singleton(R, Rest).
+select_arg(Arg, Arg, 1).
 
 elim_singleton([R], R) :- !.
 elim_singleton(R, R).
@@ -110,7 +127,7 @@ map_term_size([H|T], [S-H|Tp]) :- term_size(H, S), map_term_size(T, Tp).
 find_shortest(T, Z) :- keysort(T, [Z | _]).
 
 convert_back(M, M) :- atomic(M), !.
-convert_back(M, S) :- M =.. [Op | Li], map_convert_back(Li, Lip), group_with(Op, Lip, S).
+convert_back(M, S) :- M =.. [Op | Li], map_convert_back(Li, Lip), group_with(Op, Lip, S), !.
 map_convert_back([], []).
 map_convert_back([H|T], [Hp|Tp]) :- convert_back(H, Hp), map_convert_back(T, Tp).
 group_with(_, [A], A).
