@@ -79,8 +79,7 @@ distribute(F, Fp) :-
   (member(Op, [(+)]),
     group_by_common_factor(Lip, Lipp),
     \+ Lip = Lipp,
-    elim_singleton_op(Op, Lipp,  Fpp),
-    distribute(Fpp, Fp)
+    elim_singleton_op(Op, Lipp,  Fp)
   ;
     Fp =.. [Op | Lip]).
 
