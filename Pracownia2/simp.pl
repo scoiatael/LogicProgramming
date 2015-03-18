@@ -8,11 +8,25 @@ simplify(X, Z) :-
   push_to_common_root(X, Xp),
   sort_tree(Xp, Xpp),
   cluster(Xpp, Xppp),
-  distribute(Xppp, Y),
+  elim_zeroes(Xppp, Xpppp),
+  distribute(Xpppp, Y),
   loop_simplify(X, Y, Z).
 
 loop_simplify(X, Y, Z) :- \+ X=Y, !, simplify(Y, Z).
 loop_simplify(X, X, X) :- !.
+
+elim_zeroes(F, F) :- atomic(F), !.
+elim_zeroes(F, Fp) :- F =.. [Op | Args], map_elim_zeroes(Args, X),
+  ( Op = (*), (member(0, X), !, Xp = [0] ; Xp = X)
+  ; Op = (+), filter_zeroes(X, Xp)
+  ), elim_singleton_op(Op, Xp, Fp), !.
+
+map_elim_zeroes([], []) :- !.
+map_elim_zeroes([H|T], [Hp|Tp]) :- elim_zeroes(H, Hp), map_elim_zeroes(T, Tp).
+
+filter_zeroes([], []) :- !.
+filter_zeroes([0|T], Tp) :- !, filter_zeroes(T, Tp).
+filter_zeroes([H|T], [H|Tp]) :- filter_zeroes(T, Tp).
 
 elim_minus(X, X, 1) :- atomic(X), !.
 elim_minus(X, F, -1) :- atom(X), !, F =.. [(*), -1, X].
@@ -122,7 +136,8 @@ find_common(A, [H|T], [Rp|C], D) :- H =.. [(*) | Args], select(A, Args, R), elim
 find_best(Opts, Best) :- map_term_size(Opts, Optsp), find_shortest(Optsp, _-Best).
 
 term_size(X, 1) :- atomic(X),!.
-term_size(F, T) :- F =.. [_ | Li], reduce_term_size(Li, S), sum_list(S, T).
+term_size(F, T) :- F =.. [_ | Li], reduce_term_size(Li, S), sum_list([1 | S], T).
+
 reduce_term_size([], []).
 reduce_term_size([H|T], [S | Ts]) :- term_size(H, S), reduce_term_size(T, Ts).
 
