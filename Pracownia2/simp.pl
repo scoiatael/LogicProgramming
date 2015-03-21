@@ -2,7 +2,7 @@
 
 simp(St, Y) :- prepare(St, X), simplify(X, Z), convert_back(Z, Y).
 
-prepare(X, Y) :- elim_minus(X, Z, 1), push_to_common_root(Z, Y), !.
+prepare(X, Y) :- elim_minus(X, Z), push_to_common_root(Z, Y), !.
 
 pipe([], X, X).
 pipe([H|T], Acc, X) :- F =.. [ H, Acc, P], F, pipe(T, P, X).
@@ -16,6 +16,7 @@ simplify(X, Z) :-
     sort_tree,
     cluster,
     elim_zeroes,
+    elim_minus,
     distribute
   ], X, Y),
   loop_simplify(X, Y, Z).
@@ -33,11 +34,12 @@ filter_zeroes([], []) :- !.
 filter_zeroes([0|T], Tp) :- !, filter_zeroes(T, Tp).
 filter_zeroes([H|T], [H|Tp]) :- filter_zeroes(T, Tp).
 
+elim_minus(X, Y) :- convert_back(X, X1), elim_minus(X1, Y1, 1), push_to_common_root(Y1, Y).
 elim_minus(X, X, 1) :- atomic(X), !.
 elim_minus(X, F, -1) :- atom(X), !, F =.. [(*), -1, X].
 elim_minus(X, F, -1) :- number(X), !, F is -X.
 elim_minus(F, Fp, V) :- F =.. [(-), A, B], !, elim_minus(A, Ap, V), Vb is V*(-1), elim_minus(B, Bp, Vb), Fp =.. [(+), Ap, Bp].
-elim_minus(F, Fp, V) :- F =.. [(+), A, B], elim_minus(A, Ap, V), elim_minus(B, Bp, V), Fp =.. [(+), Ap, Bp].
+elim_minus(F, Fp, V) :- F =.. [(+), A, B], !, elim_minus(A, Ap, V), elim_minus(B, Bp, V), Fp =.. [(+), Ap, Bp].
 elim_minus(F, Fp, V) :- F =.. [(*), A, B], elim_minus(A, Ap, V), elim_minus(B, Bp, 1), Fp =.. [(*), Ap, Bp].
 
 push_to_common_root(X, X):- atomic(X), !.
@@ -58,7 +60,8 @@ cluster(X, X) :- atomic(X), !.
 cluster(F, Fp) :-
   F =.. [Op | Li],
   map(cluster, Li, Lip),
-  fold_cluster(Op, Lip, Lipp),
+  msort(Lip, Lip1),
+  fold_cluster(Op, Lip1, Lipp),
   elim_singleton_op(Op, Lipp, Fp), !.
 
 fold_cluster((-), X, F) :- cluster_num((-), X, Xp, Y), F = [ Xp | Y].
@@ -105,12 +108,12 @@ elim_singleton_op(Op, Lipp, Fpp) :- Fpp =.. [Op | Lipp].
 group_by_common_factor([], []).
 group_by_common_factor([H|T], [Lpp | D]) :-
   select_arg(H, A, R),
+  \+ number(A),
   find_common(A, T, C, D),
   \+ C = [],
   append(R, C, Args),
   Fac =.. [(+) | Args],
-  Mult =.. [(*), A, Fac],
-  elim_singleton_op((+), [Mult | D], Lpp).
+  Lpp =.. [(*), A, Fac].
 group_by_common_factor([H|T], [H|D]) :- group_by_common_factor(T, D).
 
 select_arg(H, Arg, Rest) :-
@@ -123,8 +126,9 @@ select_arg(Arg, Arg, [1]).
 elim_singleton([R], R) :- !.
 elim_singleton(R, R).
 
+find_common(A, [H|T], [Rp|C], D) :- H =.. [(*) | Args], select(A, Args, R),!, elim_singleton_op((*), R, Rp), find_common(A, T, C, D).
+find_common(A, [H|T], C, [H|D]) :- find_common(A, T, C, D).
 find_common(_, T, [], T).
-find_common(A, [H|T], [Rp|C], D) :- H =.. [(*) | Args], select(A, Args, R), elim_singleton_op((*), R, Rp), find_common(A, T, C, D).
 
 convert_back(M, M) :- atomic(M), !.
 convert_back(M, S) :- M =.. [Op | Li], map(convert_back, Li, Lip), group_with(Op, Lip, S), !.
