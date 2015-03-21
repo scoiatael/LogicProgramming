@@ -1,6 +1,6 @@
 % vi: syntax=prolog, filetype=prolog
 
-simp(St, Y) :- prepare(St, X), findall(Z, simplify(X, Z), B), find_best(B, Best), convert_back(Best, Y).
+simp(St, Y) :- prepare(St, X), simplify(X, Z), convert_back(Z, Y).
 
 prepare(X, Y) :- elim_minus(X, Z, 1), push_to_common_root(Z, Y), !.
 
@@ -107,7 +107,8 @@ group_by_common_factor([H|T], [Lpp | D]) :-
   select_arg(H, A, R),
   find_common(A, T, C, D),
   \+ C = [],
-  Fac =.. [(+), R | C],
+  append(R, C, Args),
+  Fac =.. [(+) | Args],
   Mult =.. [(*), A, Fac],
   elim_singleton_op((+), [Mult | D], Lpp).
 group_by_common_factor([H|T], [H|D]) :- group_by_common_factor(T, D).
@@ -116,25 +117,14 @@ select_arg(H, Arg, Rest) :-
   H=.. [Op | Args],
   \+ Args = [],
   Op = (*),
-  select(Arg, Args, R),
-  elim_singleton(R, Rest).
-select_arg(Arg, Arg, 1).
+  select(Arg, Args, Rest).
+select_arg(Arg, Arg, [1]).
 
 elim_singleton([R], R) :- !.
 elim_singleton(R, R).
 
 find_common(_, T, [], T).
 find_common(A, [H|T], [Rp|C], D) :- H =.. [(*) | Args], select(A, Args, R), elim_singleton_op((*), R, Rp), find_common(A, T, C, D).
-
-find_best(Opts, Best) :- map(term_size, Opts, Optsp), find_shortest(Optsp, _-Best).
-
-term_size(X, 1-X) :- atomic(X),!.
-term_size(F, T-F) :- F =.. [_ | Li], reduce_term_size(Li, S), sum_list([1 | S], T).
-
-reduce_term_size([], []).
-reduce_term_size([H|T], [S | Ts]) :- term_size(H, S), reduce_term_size(T, Ts).
-
-find_shortest(T, Z) :- keysort(T, [Z | _]).
 
 convert_back(M, M) :- atomic(M), !.
 convert_back(M, S) :- M =.. [Op | Li], map(convert_back, Li, Lip), group_with(Op, Lip, S), !.
