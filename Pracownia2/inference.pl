@@ -1,7 +1,7 @@
 % vi: syntax=prolog, filetype=prolog
 
 inference(Facts, Rules, MaxLength, Result) :-
-  map_addFact(Facts, []),
+  map_addFact(Facts),
   infereTillFull(Facts, Rules, MaxLength, Result),
   dropFacts.
 
@@ -10,13 +10,17 @@ infereTillFull(Facts, Rules, MaxLength, Result) :-
   infere(Rule, SomeResults),
   has_newFacts(SomeResults),
   drop_longFacts(SomeResults, MaxLength, ShortFacts),
-  \+ ShortFacts = [],
-  uniqueFacts(Facts, ShortFacts, NewFacts), !,
-  map_addFact(ShortFacts, Facts),
-  infereTillFull(NewFacts, Rules, MaxLength, Result).
+  filter_uniqueFacts(Facts, ShortFacts, NewFacts),
+  \+ NewFacts = [], !,
+  map_addFact(NewFacts),
+  append(NewFacts, Facts, AllFacts),
+  infereTillFull(AllFacts, Rules, MaxLength, Result).
 infereTillFull(Facts, _, _, Facts).
 
-infere(X>>R, Result) :- copy_term(X>>R, Premises>>Result), check(Premises).
+infere(X>>R, AllResults) :-
+  copy_term(X>>R, Premises>>Result),
+  findall(Result, check(Premises), Results),
+  flatten(Results, AllResults).
 
 check([]).
 check([H|T]) :- fact(H), check(T).
@@ -28,11 +32,12 @@ drop_longFacts([], _, []).
 drop_longFacts([H|T], MaxLength, [H|Tp]) :- term_size(H, S), S =< MaxLength, !, drop_longFacts(T, MaxLength, Tp).
 drop_longFacts([_|T], MaxLength, Tp) :- drop_longFacts(T, MaxLength, Tp).
 
-uniqueFacts(Facts, [], Facts) :- !.
-uniqueFacts(Facts, [H|T], [H|Tp]) :- \+ member(H, Facts), uniqueFacts(Facts, T, Tp).
+filter_uniqueFacts(_, [], []) :- !.
+filter_uniqueFacts(Facts, [H|T], [H|Tp]) :- \+ member(H, Facts), !, filter_uniqueFacts(Facts, T, Tp).
+filter_uniqueFacts(Facts, [_|T], Tp) :- filter_uniqueFacts(Facts, T, Tp).
 
-map_addFact([], _).
-map_addFact([X|T], OldFacts) :- (member(X, OldFacts), !; asserta(fact(X))), map_addFact(T, OldFacts).
+map_addFact([]).
+map_addFact([X|T]) :- asserta(fact(X)), map_addFact(T).
 
 dropFacts :- retractall(fact(_)).
 
