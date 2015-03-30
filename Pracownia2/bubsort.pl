@@ -11,15 +11,6 @@ bubsort(L, Sorted) :- monotonic(L, B, S),
     bubsort(L1, Sorted)
   ).
 
-select2([A,B], [P1, P2, P3], L) :-
-  select1(A, L, [P1, ARest]),
-  \+ ARest = [],
-  select_lower(A, B, ARest, [P2, P3]),
-  A > B, !.
-select1(A, L, [P1, P2]) :- append(Beg, P2, L), append(P1, [A], Beg).
-select_lower(A, H, [H|T], [[], T]) :- H < A, !.
-select_lower(A, C, [H|T], [[H|B], E]) :- select_lower(A, C, T, [B, E]).
-
 select_higher(A, H, [H|T], [[], T]) :- H > A, !.
 select_higher(A, C, [H|T], [[H|B], E]) :- select_higher(A, C, T, [B, E]).
 
