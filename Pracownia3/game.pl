@@ -3,8 +3,10 @@ wygrywa(L, K):-
   findall(X, between(0, K, X), Dom),
   reverse(Dom, RDom),
   maplist(wins(L, K), RDom, _),
-  wins(0), !,
-  retractall(wins(X)).
+  (
+    wins(0), !, retractall(wins(X))
+  ; retractall(wins(X)), fail
+  ).
 
 wins(L, K, N, 1) :-
   ( wins(L, K, N), !, asserta(wins(N))
