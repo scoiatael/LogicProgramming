@@ -101,6 +101,7 @@ pkt(war,2,2,1).
 pkt(game,0.5,1.5,2).
 pkt(sat,1,0.1,2).
 pkt(jars,2,1,1).
+pkt(simp2, 3.05,0.5,0.5).
 goodSize(sum_list,29).
 goodSize(permy,53).
 goodSize(occur,59).
@@ -110,6 +111,7 @@ goodSize(mysort,85).
 goodSize(multiset,79).
 goodSize(multiset2,83).
 goodSize(simp,600).
+goodSize(simp2,600).
 goodSize(inference, 195).
 goodSize(connected, 38).
 goodSize(bubsort, 40).
@@ -133,6 +135,7 @@ goodSpeed(war,0.65).
 goodSpeed(game,0.025).
 goodSpeed(sat,0.001).
 goodSpeed(jars,0.87).
+goodSpeed(simp2, 0.08).
 %%%%%%%%%%%%%% KONIEC DEFINICJI LISTY %%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %  Zadanie simp: upraszczanie wyrażeń
@@ -180,6 +183,11 @@ simpTest(Term,Size) :-
   equal(Term,Simple),
   termSize(Simple,ASize),
   ASize =< Size.
+simp2Test(Term,Size) :-
+  simp2(Term,Simple),
+  equal(Term,Simple),
+  termSize(Simple,ASize),
+  ASize =< Size.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %  Zadanie connected
 edge(a,b).
@@ -203,7 +211,9 @@ comp_s(Z,S,Y):-
   (X  > 1  -> X1 is X*sqrt(X); X1 = X),
   progStylowy(Prog),
   (X1 > Prog -> Y=Prog ; Y=X1).
+count_test_for_correctness(simp2).
 ocena(Z,Err,Time,Size,V) :-
+  \+ count_test_for_correctness(Z),
   pkt(Z,P,E,S),
   comp_p(Z,Err,MP),  %write(mp(MP)),
   comp_e(Z,Time,ME),  %write(me(ME)),
@@ -215,11 +225,31 @@ ocena(Z,Err,Time,Size,V) :-
   write('  Efektywnosc '), write(ME),nl,
   write('  Styl        '), write(MS), nl,
   write('Punkty:  '), write(V),nl.
-compute_time(Task,ScaledTime) :-
+ocena(Z,Err,Time,Size,V) :-
+  count_test_for_correctness(Z),
+  pkt(Z,P,E,S),
+  prepareTests(Z,Ts),
+  length(Ts,N),
+  MP is (N-E)/N,
+  comp_e(Z,Time,ME),  %write(me(ME)),
+  comp_s(Z,Size,MS),  %write(me(MS)),
+  V is P*MP+E*ME+S*MS,
+  nl,
+  write('Zadanie '), write(Z), nl,
+  write('  Poprawnosc  '), write(MP),nl,
+  write('  Efektywnosc '), write(ME),nl,
+  write('  Styl        '), write(MS), nl,
+  write('Punkty:  '), write(V),nl.
+compute_time_one_run(Task,ScaledTime) :-
   prepareTests(Task,Tests),
   speed(Scale),
   te(Tests,_,Time),
   ScaledTime is Time*Scale.
+compute_time(Task,ScaledTime) :-
+  compute_time_one_run(Task, T1),
+  compute_time_one_run(Task, T2),
+  compute_time_one_run(Task, T3),
+  ScaledTime is T1 + T2 + T3.
 evaluate(L) :- evaluate(L,0,P), write('Ogólna ocena '),write(P), nl.
 evaluate([],P,P) :- write('------------- Koniec testów ----------------'), nl.
 evaluate([Z|Zs],AP,P) :-
@@ -328,6 +358,20 @@ prepareTests(simp,T):-
       simpTest(x*(1-x+(2+x))+(4-(x+y*z)+x-1)+z*y,5),
       simpTest(x+y*z+x*y-(z*(2*x-x)+1)+5-(x+2*x+y+x)+y-(z+x)*y,9)
   ].
+prepareTests(simp2,T):-
+  T =
+  [
+      simp2Test(3+3,1),
+      simp2Test((z*y+(2*x-3*x+(1-2)*y)*z)*(10-11),3),
+      simp2Test(x+y+(x-(z+x))+2*z,5),
+      simp2Test(2*x*3*y*4,5),
+      simp2Test(x*(1-x+(2+x))+(4-(x+y*z)+x-1)+z*y,5),
+      simp2Test(x+y*z+x*y-(z*(2*x-x)+1)+5-(x+2*x+y+x)+y-(z+x)*y,9),
+      simp2Test(x+x+x-x-x-x,1),
+      simp2Test(x-(x+x+x)+(-x-x)-(-x-x-x-x),1),
+      simp2Test(x*y -y*x, 1),
+      simp2Test(x*(1+x+3) - (2+1+x) * x,1)
+  ].
 prepareTests(connected, T) :-
   T = [
     connected(a,b),
@@ -345,7 +389,7 @@ prepareTests(war,T) :-
     (war([1,2,3,4,5,6,7,8,9,9,9,2,5,5,5],[2,5,4,6,1,1,1,8,7,6,5,4,3,2,1],N3),!, N3=43),
     (war([1,2,3,4,5,6,4,6,7,8,5,6,3,2,9,8,7,8,9,9,9,2,5,5,5],[2,5,4,6,1,1,1,8,7,5,6,3,4,5,6,8,3,5,7,6,5,4,3,2,1],N4),!, N4=709),
     (war([1,2,3,4,5,6,4,6,7,8,5,6,3,2,5,7,4,3,8,3,2,9,8,7,9,8,7,8,9,9,9,2,5,5,5],[2,5,4,6,1,1,1,8,7,5,6,3,4,5,6,8,3,5,7,6,5,4,6,7,8,3,4,6,8,0,1,4,3,2,1],N5),!, N5=3449),
-    (war([1,2,3,4,5,6,4,6,7,8,5,6,3,2,3,4,6,5,7,4,3,8,3,2,9,8,7,9,8,7,8,9,9,1,1,3,9,9,2,5,5,5],[2,5,4,6,1,1,1,8,7,5,6,3,4,5,6,9,9,8,3,5,7,6,1,0,1,1,5,4,6,4,5,7,8,3,4,6,8,7,7,70,0,8,3,1,4,3,2,1],N6),!, N6=inf)
+    (war([1,2,3,4,5,6,4,6,7,8,5,6,3,2,3,4,6,5,7,4,3,8,3,2,9,8,7,9,8,7,8,9,9,1,1,3,9,9,2,5,5,5],[2,5,4,6,1,1,1,8,7,5,6,3,4,5,6,9,9,8,3,5,7,6,1,0,1,1,5,4,6,4,5,7,8,3,4,6,8,7,7,70,0,8,3,1,4,3,2,1],N6),!, N6=3570)
   ].
 prepareTests(game,T) :-
   T =
@@ -469,11 +513,12 @@ eqmsets(A,B) :-
   msort(BL,Sorted).
 %-------------------------------------------------
 :- nl.
-:- write(' Wersja testow z 3 kwietnia 2015'), nl.
+:- write(' Wersja testow z 13 kwietnia 2015'), nl.
 :- write(' W kartotece, w ktorej uruchamia sie program powinny znajdowac sie pliki '), nl.
 :- write('  P1: sum_list.pl, occur.pl, mysort.pl, multiset.pl, term'), nl.
 :- write('  P2: simp, inference, multiset2, bubsort, connected'), nl.
-:- write('  P3: game.pl, jars.pl, sat.pl, war.pl'), nl,nl.
+:- write('  P3: game.pl, jars.pl, sat.pl, war.pl, simp2'), nl,nl.
 :- write(' Uruchamianie: evaluate(lista nazw rozwiazanych zadan)'),nl.
-:- write('  np: evaluate([jars, war, sat, game])'),nl,nl.
-:- write('  TODO: simp2'),nl.
+:- write('  np: evaluate([jars, war, sat, game, simp2])'),nl,nl.
+:- write('  TODO: simp2 jest wersją beta, brak testów studenckich'),nl.
+:- write('  UWAGA: każdy test jest wykonywany 3 razy'),nl.
