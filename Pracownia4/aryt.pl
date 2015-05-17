@@ -16,7 +16,7 @@ aryt(A+B=C, Sol) :-
   nonZeroFirstLetters(First, Second, Third),
   vars_to_number(First, 0, FirstNumber), vars_to_number(Second, 0, SecondNumber), vars_to_number(Third, 0, ThirdNumber),
   FirstNumber + SecondNumber #= ThirdNumber,
-  label(Vars),
+  labeling([ff, bisect], Vars),
   solFromBindings(Binding, Sol).
 
 codesToBinding([], B, B).
