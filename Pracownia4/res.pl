@@ -4,6 +4,7 @@ resolution(Clauses, Proof):-
 
 prove(Clauses, Proof):-
   member(([], Proof), Clauses), !.
+
 prove([H|T], Proof):-
   H = ([P|_], _),
   divide(P, [H|T], WithP, NegP, NoP),
@@ -14,9 +15,12 @@ prove([H|T], Proof):-
 resolve(P, L1, L2, Res):-
   findall(M, (member(H1, L1), member(H2, L2), merge(H1, H2, P, M), M = (C,_), \+tautology(C)), Res).
 
+negation(- Q, Q) :-!.
+negation(Q, -Q).
+
 merge((C1, P1), (C2, P2), Q, (S, resolvent(S, P1, P2))):-
   select(Q, C1, NC1),
-  (NQ = - Q ; NQ is -1 * Q),
+  negation(Q, NQ),
   select(NQ, C2, NC2), !,
   append(NC1, NC2, R),
   sort(R, S).
@@ -36,5 +40,5 @@ prepare(X, Y) :-
 
 tautology(L):-
   member(X, L),
-  Y = - X,
+  negation(X, Y),
   member(Y, L).
