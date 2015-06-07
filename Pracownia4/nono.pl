@@ -4,7 +4,7 @@ nono(Rzedy, Kolumny, B) :-
   length(Rzedy, NRzedow),
   length(Kolumny, NKolumn),
   length(B, NRzedow),
-  maplist(B, length_swapped(NKolumn)),
+  maplist(length_swapped(NKolumn), B),
   flatten(B, Vars),
   Vars ins 0 \/ 1,
   transpose(B, BTransp),
@@ -14,27 +14,19 @@ nono(Rzedy, Kolumny, B) :-
 
 constraint_rows(B, Rows) :-
   zip(B, Rows, Zipped),
-  maplist(Zipped, constraint_rows_aux).
+  maplist(constraint_rows_aux, Zipped).
 
 constraint_rows_aux((Row, RowDetail)) :-
   constraint_detail(RowDetail, 1, 0, RowCLPFD),
   constraint_row(Row, 1, 0, 0, RowCLPFD).
 
-constraint_row([], _, _, Acc, Acc) :- !.
-constraint_row([H|T], PowerOfTwo, WasZero, Acc, Row) :-
-  (H #=0 #/\ WasZero #= 0)  #==>
-  (
-    PowerOfTwo1 #= PowerOfTwo * 2 #/\ WasZero1 #= 1 #/\ Acc1 #= Acc
-  ),
-  (H #=0 #/\ WasZero #= 1)  #==>
-  (
-    PowerOfTwo1 #= PowerOfTwo #/\ WasZero1 #= 1 #/\ Acc1 #= Acc
-  ),
-  H #=1 #==>
-  (
-    PowerOfTwo1 #= PowerOfTwo * 2 #/\ WasZero1 #= 0 #/\ Acc1 #= Acc+PowerOfTwo
-  ),
-  constraint_row(T, PowerOfTwo1, WasZero1, Acc1, Row).
+constraint_row([], _, _, Acc, Row) :- Acc #= Row.
+constraint_row([H|T], PowerOfTwo, PrevH, Acc, Row) :-
+  fd_sup(PowerOfTwo, SupPower), SupPower1 is 2*SupPower+1, PowerOfTwo1 in 1..SupPower1,
+  fd_inf(Acc, InfAcc1), SupAcc1 is Row+1, Acc1 in InfAcc1..SupAcc1
+  , PowerOfTwo1 #= PowerOfTwo + PowerOfTwo*max(H, PrevH)
+  , Acc1 #= Acc + PowerOfTwo*H
+  , constraint_row(T, PowerOfTwo1, H, Acc1, Row).
 
 constraint_detail([], _, Acc, Acc) :- !.
 constraint_detail([H|T], PowerOfTwo, Acc, Row) :-
@@ -53,3 +45,8 @@ length_swapped(N, T) :- length(T, N).
 
 zip([], [], []).
 zip([H1|T1], [H2|T2], [(H1,H2)|T3]) :- zip(T1, T2, T3).
+
+test1(
+    [[4],[1,1,6],[1,1,6],[1,1,6],[4,9],[1,1],[1,1],[2,7,2],[1,1,1,1],[2,2]],
+    [[4],[1,2],[1,1],[5,1],[1,2],[1,1],[5,1],[1,1],[4,1],[4,1],[4,2],[4,1],[4,1],[4,2],[4]]
+).
