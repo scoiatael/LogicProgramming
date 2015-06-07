@@ -12,15 +12,44 @@ nono(Rzedy, Kolumny, B) :-
   constraint_rows(BTransp, Kolumny),
   labeling([ff, bisect], Vars).
 
-length_swapped(N, T) :- length(T, N).
-
 constraint_rows(B, Rows) :-
   zip(B, Rows, Zipped),
   maplist(Zipped, constraint_rows_aux).
 
-constraint_rows_aux(Row, RowDetail) :-
-  sumlist(RowDetail, S),
-  sum(Row, #=, S).
+constraint_rows_aux((Row, RowDetail)) :-
+  constraint_detail(RowDetail, 1, 0, RowCLPFD),
+  constraint_row(Row, 1, 0, 0, RowCLPFD).
+
+constraint_row([], _, _, Acc, Acc) :- !.
+constraint_row([H|T], PowerOfTwo, WasZero, Acc, Row) :-
+  (H #=0 #/\ WasZero #= 0)  #==>
+  (
+    PowerOfTwo1 #= PowerOfTwo * 2 #/\ WasZero1 #= 1 #/\ Acc1 #= Acc
+  ),
+  (H #=0 #/\ WasZero #= 1)  #==>
+  (
+    PowerOfTwo1 #= PowerOfTwo #/\ WasZero1 #= 1 #/\ Acc1 #= Acc
+  ),
+  H #=1 #==>
+  (
+    PowerOfTwo1 #= PowerOfTwo * 2 #/\ WasZero1 #= 0 #/\ Acc1 #= Acc+PowerOfTwo
+  ),
+  constraint_row(T, PowerOfTwo1, WasZero1, Acc1, Row).
+
+constraint_detail([], _, Acc, Acc) :- !.
+constraint_detail([H|T], PowerOfTwo, Acc, Row) :-
+  increment(H, PowerOfTwo, Acc, PowerOfTwo1, Acc1),
+  PowerOfTwo0 is PowerOfTwo1*2,
+  constraint_detail(T, PowerOfTwo0, Acc1, Row).
+
+increment(0, PowerOfTwo, Acc, PowerOfTwo, Acc) :- !.
+increment(X, PowerOfTwo, Acc, PowerOfTwo0, Acc0) :-
+  X > 0, !, X1 is X - 1,
+  PowerOfTwo1 is PowerOfTwo * 2,
+  Acc1 is Acc + PowerOfTwo,
+  increment(X1, PowerOfTwo1, Acc1, PowerOfTwo0, Acc0).
+
+length_swapped(N, T) :- length(T, N).
 
 zip([], [], []).
 zip([H1|T1], [H2|T2], [(H1,H2)|T3]) :- zip(T1, T2, T3).
