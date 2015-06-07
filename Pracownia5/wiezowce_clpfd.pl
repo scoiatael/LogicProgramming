@@ -15,7 +15,7 @@ wiezowce(N, Rows, Cols, Sq) :-
   row_constraints(Sq, Rows),
   transpose(Sq, TSq),
   row_constraints(TSq, Cols),
-  label(Sq).
+  labeling([ff, bisect], Vars).
 
 n_square(N, Sq) :-
   length(Sq, N),
@@ -30,6 +30,8 @@ row_constraints(Sq, Rows) :-
   zip(Rows, Sq, RowDescs),
   maplist(row_constraint, RowDescs).
 
-row_constraint((RowDesc, Row)) :-
-  n_max(Row, RowDesc),
+row_constraint(((L, R), Row)) :-
+  n_max(Row, L),
+  reverse(Row, RRow),
+  n_max(RRow, R),
   all_different(Row).
