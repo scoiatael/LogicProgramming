@@ -10,29 +10,37 @@ nono(Rzedy, Kolumny, B) :-
   transpose(B, BTransp),
   constraint_rows(B, Rzedy),
   constraint_rows(BTransp, Kolumny),
-  labeling([ff, bisect], Vars).
+  labeling([ffc, enum], Vars).
 
 constraint_rows(B, Rows) :-
   zip(B, Rows, Zipped),
   maplist(constraint_rows_aux, Zipped).
 
 constraint_rows_aux((Row, RowDetail)) :-
-  constraint_detail(RowDetail, 1, 0, RowCLPFD),
-  constraint_row(Row, 1, 0, 0, RowCLPFD).
+  row_hash(RowDetail, RowHash),
+  constraint_row(Row, RowHash),
+  sumlist(RowDetail, RowSum),
+  sum(Row, #=, RowSum).
+
+constraint_row(Row, RowHash) :-
+  constraint_row(Row, 1, 0, 0, RowHash).
 
 constraint_row([], _, _, Acc, Row) :- Acc #= Row.
 constraint_row([H|T], PowerOfTwo, PrevH, Acc, Row) :-
-  %fd_sup(PowerOfTwo, SupPower), SupPower1 is 2*SupPower+1, PowerOfTwo1 in 1..SupPower1,
-  %fd_inf(Acc, InfAcc1), SupAcc1 is Row+1, Acc1 in InfAcc1..SupAcc1,
-    PowerOfTwo1 = PowerOfTwo + PowerOfTwo*max(H, PrevH)
-  , Acc1 = Acc + PowerOfTwo*H
+  fd_sup(PowerOfTwo, SupPower), SupPower1 is 2*SupPower+1, PowerOfTwo1 in 1..SupPower1,
+  fd_inf(Acc, InfAcc1), SupAcc1 is Row+1, Acc1 in InfAcc1..SupAcc1,
+    PowerOfTwo1 #= PowerOfTwo + PowerOfTwo * max(H, PrevH)
+  , Acc1 #= Acc + PowerOfTwo*H
   , constraint_row(T, PowerOfTwo1, H, Acc1, Row).
 
-constraint_detail([], _, Acc, Acc) :- !.
-constraint_detail([H|T], PowerOfTwo, Acc, Row) :-
+row_hash(RowDetail, RowHash) :-
+  row_hash(RowDetail, 1, 0, RowHash).
+
+row_hash([], _, Acc, Acc) :- !.
+row_hash([H|T], PowerOfTwo, Acc, Row) :-
   increment(H, PowerOfTwo, Acc, PowerOfTwo1, Acc1),
   PowerOfTwo0 is PowerOfTwo1*2,
-  constraint_detail(T, PowerOfTwo0, Acc1, Row).
+  row_hash(T, PowerOfTwo0, Acc1, Row).
 
 increment(0, PowerOfTwo, Acc, PowerOfTwo, Acc) :- !.
 increment(X, PowerOfTwo, Acc, PowerOfTwo0, Acc0) :-
