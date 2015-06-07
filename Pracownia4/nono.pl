@@ -22,10 +22,10 @@ constraint_rows_aux((Row, RowDetail)) :-
 
 constraint_row([], _, _, Acc, Row) :- Acc #= Row.
 constraint_row([H|T], PowerOfTwo, PrevH, Acc, Row) :-
-  fd_sup(PowerOfTwo, SupPower), SupPower1 is 2*SupPower+1, PowerOfTwo1 in 1..SupPower1,
-  fd_inf(Acc, InfAcc1), SupAcc1 is Row+1, Acc1 in InfAcc1..SupAcc1
-  , PowerOfTwo1 #= PowerOfTwo + PowerOfTwo*max(H, PrevH)
-  , Acc1 #= Acc + PowerOfTwo*H
+  %fd_sup(PowerOfTwo, SupPower), SupPower1 is 2*SupPower+1, PowerOfTwo1 in 1..SupPower1,
+  %fd_inf(Acc, InfAcc1), SupAcc1 is Row+1, Acc1 in InfAcc1..SupAcc1,
+    PowerOfTwo1 = PowerOfTwo + PowerOfTwo*max(H, PrevH)
+  , Acc1 = Acc + PowerOfTwo*H
   , constraint_row(T, PowerOfTwo1, H, Acc1, Row).
 
 constraint_detail([], _, Acc, Acc) :- !.
