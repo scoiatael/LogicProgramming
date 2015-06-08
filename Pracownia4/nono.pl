@@ -1,33 +1,41 @@
 :- use_module(library(clpfd)), dynamic(hash/3).
 
-generate_possibilities(_, []).
+generate_possibilities(_, []) :- !.
 generate_possibilities(N, [H|T]) :-
   length(Li, N),
-  Li ins 0 \/ 1,
-  %row_hash(H, Hash),
-  findall(_, (insert_ones(Li), constraint_row(Li, Hash), \+ hash(N, Hash, Li), asserta(hash(N, Hash, Li))), _).
-  %findall(_, (label(Li), \+ hash(N, Hash, Li), asserta(hash(N, Hash, Li))), _),
-  %generate_possibilities(N, T).
+  row_hash(H, Hash),
+  findall(_, (generate_row(Li, Li, H), \+ hash(N, Hash, Li), asserta(hash(N, Hash, Li))), _),
+  generate_possibilities(N, T).
 
-insert_ones([]).
-insert_ones([H|T]) :-
-  member(H, [0,1]),
-  insert_ones(T).
+generate_row(Li, _, []) :- all_one_or_zero(Li).
+generate_row(Li, Working, [H|T]) :-
+  ones_and_zero(H, LiBeg, T),
+  jump_some(Working, LiNew),
+  append(LiBeg, LiEnd, LiNew),
+  generate_row(Li, LiEnd, T).
+ones_and_zero(X, Li, T) :- length(L, X), maplist(const_one, L, L1), (T=[], L1 = Li; append(L1, [0], Li)).
+const_one(_, 1).
+
+all_one_or_zero([]).
+all_one_or_zero([X|T]) :- nonvar(X), !, all_one_or_zero(T).
+all_one_or_zero([0|T]) :- all_one_or_zero(T).
+
+jump_some([], []).
+jump_some([H|T], [H|T]).
+jump_some([_|T], T0) :- jump_some(T, T0).
 
 nono(Rzedy, Kolumny, B) :-
   length(Rzedy, NRzedow),
   length(Kolumny, NKolumn),
-  generate_possibilities(NKolumn, Kolumny),
-  generate_possibilities(NRzedow, Rzedy),
+  generate_possibilities(NKolumn, Rzedy),
+  generate_possibilities(NRzedow, Kolumny),
   length(B, NRzedow),
   maplist(length_swapped(NKolumn), B),
   flatten(B, Vars),
   Vars ins 0 \/ 1,
   transpose(B, BTransp),
   constraint_rows_by_possibilities(B, Rzedy, NKolumn),
-  constraint_rows(B, Rzedy),
   constraint_rows_by_possibilities(BTransp, Kolumny, NRzedow),
-  constraint_rows(BTransp, Kolumny),
   labeling([ffc, enum], Vars).
 
 constraint_rows_by_possibilities(B, Rows, NCol) :-
@@ -38,25 +46,6 @@ constraint_rows_by_possibilities_aux(N, (Row, RowDetail)) :-
   row_hash(RowDetail, RowHash),
   findall(Li, hash(N, RowHash, Li), Poss),
   tuples_in([Row], Poss).
-
-constraint_rows(B, Rows) :-
-  zip(B, Rows, Zipped),
-  maplist(constraint_rows_aux, Zipped).
-
-constraint_rows_aux((Row, RowDetail)) :-
-  row_hash(RowDetail, RowHash),
-  constraint_row(Row, RowHash),
-  sumlist(RowDetail, RowSum),
-  sum(Row, #=, RowSum).
-
-constraint_row(Row, RowHash) :-
-  constraint_row(Row, 1, 0, 0, RowHash).
-
-constraint_row([], _, _, Acc, Row) :- Acc #= Row.
-constraint_row([H|T], PowerOfTwo, PrevH, Acc, Row) :-
-    PowerOfTwo1 #= PowerOfTwo + PowerOfTwo * max(H, PrevH)
-  , Acc1 #= Acc + PowerOfTwo*H
-  , constraint_row(T, PowerOfTwo1, H, Acc1, Row).
 
 row_hash(RowDetail, RowHash) :-
   row_hash(RowDetail, 1, 0, RowHash).
