@@ -5,8 +5,7 @@
 n_max([H|T], X) :- n_max(T, H, X0), X #= X0+1.
 n_max([], _, 0).
 n_max([H|T], Max, N) :-
-  H #> Max #==> N #= N0+1,
-  H #=< Max #==>  N #= N0, !, n_max(T, max(H, Max), N0).
+  N #= N0+ max(0, min(H-Max, 1)), !, n_max(T, max(H, Max), N0).
 
 wiezowce(N, Rows, Cols, Sq) :-
   n_square(N, Sq),

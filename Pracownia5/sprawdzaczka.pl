@@ -453,6 +453,7 @@ prepareTests(simp2,T):-
       simp2Test(x-(x+x+x)+(-x-x)-(-x-x-x-x),1),
       simp2Test(x*y -y*x, 1),
       simp2Test(x*(1+x+3) - (2+1+x) * x,1),
+
       %Pawel Florczuk
       simp2Test(3 * (x+2) * y - 3 * y * x, 3),
       simp2Test(x + 2 - x, 1),
@@ -549,6 +550,7 @@ prepareTests(mgci, T) :-
       mgci(f(A,B), f(B,A), f(1,2)),
       mgci(f(X), X, f(_))
   ].
+
 prepareTests(term_eq, T) :-
   T =
   [
@@ -778,6 +780,7 @@ nonoExtra(Name) :-
   nono(R,C,B),
   rysuj(Name,B).
 %-------------------------------------------------
+
 %-------------------------------------------------
 :- nl.
 :- write(' Wersja testow z 3 czerwca 2015'), nl.
