@@ -1,16 +1,43 @@
-:- use_module(library(clpfd)).
+:- use_module(library(clpfd)), dynamic(hash/3).
+
+generate_possibilities(_, []).
+generate_possibilities(N, [H|T]) :-
+  length(Li, N),
+  Li ins 0 \/ 1,
+  %row_hash(H, Hash),
+  findall(_, (insert_ones(Li), constraint_row(Li, Hash), \+ hash(N, Hash, Li), asserta(hash(N, Hash, Li))), _).
+  %findall(_, (label(Li), \+ hash(N, Hash, Li), asserta(hash(N, Hash, Li))), _),
+  %generate_possibilities(N, T).
+
+insert_ones([]).
+insert_ones([H|T]) :-
+  member(H, [0,1]),
+  insert_ones(T).
 
 nono(Rzedy, Kolumny, B) :-
   length(Rzedy, NRzedow),
   length(Kolumny, NKolumn),
+  generate_possibilities(NKolumn, Kolumny),
+  generate_possibilities(NRzedow, Rzedy),
   length(B, NRzedow),
   maplist(length_swapped(NKolumn), B),
   flatten(B, Vars),
   Vars ins 0 \/ 1,
   transpose(B, BTransp),
+  constraint_rows_by_possibilities(B, Rzedy, NKolumn),
   constraint_rows(B, Rzedy),
+  constraint_rows_by_possibilities(BTransp, Kolumny, NRzedow),
   constraint_rows(BTransp, Kolumny),
   labeling([ffc, enum], Vars).
+
+constraint_rows_by_possibilities(B, Rows, NCol) :-
+  zip(B, Rows, Zipped),
+  maplist(constraint_rows_by_possibilities_aux(NCol), Zipped).
+
+constraint_rows_by_possibilities_aux(N, (Row, RowDetail)) :-
+  row_hash(RowDetail, RowHash),
+  findall(Li, hash(N, RowHash, Li), Poss),
+  tuples_in([Row], Poss).
 
 constraint_rows(B, Rows) :-
   zip(B, Rows, Zipped),
@@ -27,8 +54,6 @@ constraint_row(Row, RowHash) :-
 
 constraint_row([], _, _, Acc, Row) :- Acc #= Row.
 constraint_row([H|T], PowerOfTwo, PrevH, Acc, Row) :-
-  fd_sup(PowerOfTwo, SupPower), SupPower1 is 2*SupPower+1, PowerOfTwo1 in 1..SupPower1,
-  fd_inf(Acc, InfAcc1), SupAcc1 is Row+1, Acc1 in InfAcc1..SupAcc1,
     PowerOfTwo1 #= PowerOfTwo + PowerOfTwo * max(H, PrevH)
   , Acc1 #= Acc + PowerOfTwo*H
   , constraint_row(T, PowerOfTwo1, H, Acc1, Row).
