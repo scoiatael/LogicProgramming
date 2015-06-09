@@ -1,9 +1,8 @@
 :- use_module(library(clpfd)), dynamic(hash/3).
 
 generate_possibilities(_, []) :- !.
-generate_possibilities(N, [H|T]) :-
+generate_possibilities(N, [(H,Hash)|T]) :-
   length(Li, N),
-  row_hash(H, Hash),
   findall(_, (generate_row(Li, Li, H), \+ hash(N, Hash, Li), asserta(hash(N, Hash, Li))), _),
   generate_possibilities(N, T).
 
@@ -27,23 +26,26 @@ jump_some([_|T], T0) :- jump_some(T, T0).
 nono(Rzedy, Kolumny, B) :-
   length(Rzedy, NRzedow),
   length(Kolumny, NKolumn),
-  generate_possibilities(NKolumn, Rzedy),
-  generate_possibilities(NRzedow, Kolumny),
+  maplist(row_hash, Rzedy, RzedyHashed),
+  maplist(row_hash, Kolumny, KolumnyHashed),
+  zip(Rzedy, RzedyHashed, RzedyRzedyHashed),
+  zip(Kolumny, KolumnyHashed, KolumnyKolumnyHashed),
+  generate_possibilities(NKolumn, RzedyRzedyHashed),
+  generate_possibilities(NRzedow, KolumnyKolumnyHashed),
   length(B, NRzedow),
   maplist(length_swapped(NKolumn), B),
   flatten(B, Vars),
   Vars ins 0 \/ 1,
   transpose(B, BTransp),
-  constraint_rows_by_possibilities(B, Rzedy, NKolumn),
-  constraint_rows_by_possibilities(BTransp, Kolumny, NRzedow),
+  constraint_rows_by_possibilities(B, RzedyHashed, NKolumn),
+  constraint_rows_by_possibilities(BTransp, KolumnyHashed, NRzedow),
   labeling([ffc, enum], Vars).
 
 constraint_rows_by_possibilities(B, Rows, NCol) :-
   zip(B, Rows, Zipped),
   maplist(constraint_rows_by_possibilities_aux(NCol), Zipped).
 
-constraint_rows_by_possibilities_aux(N, (Row, RowDetail)) :-
-  row_hash(RowDetail, RowHash),
+constraint_rows_by_possibilities_aux(N, (Row, RowHash)) :-
   findall(Li, hash(N, RowHash, Li), Poss),
   tuples_in([Row], Poss).
 
