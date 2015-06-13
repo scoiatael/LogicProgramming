@@ -110,6 +110,8 @@ pkt(queens,1,2,0).
 pkt(nono,4,3,2).
 pkt(res, 2,1,1).
 pkt(osemka,2,2,2).
+pkt(wiez,3,4,1).
+pkt(wiez2,2,2,2).
 goodSize(res, 720).
 goodSize(sum_list,29).
 goodSize(permy,53).
@@ -134,6 +136,8 @@ goodSize(osemka,770).
 goodSize(aryt, 240).
 goodSize(queens,170).
 goodSize(nono,1500).
+goodSize(wiez,620).
+goodSize(wiez2,600).
 goodSpeed(multiset,0.09).
 goodSpeed(multiset2,0.09).
 goodSpeed(simp,0.06).
@@ -160,6 +164,8 @@ goodSpeed(osemka,0.015).
 goodSpeed(aryt,0.0024).
 goodSpeed(term_eq, 0.001).
 goodSpeed(mgci, 0.001).
+goodSpeed(wiez,2.2).
+goodSpeed(wiez2,6).
 %%%%%%%%%%%%%% KONIEC DEFINICJI LISTY %%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %  Zadanie simp: upraszczanie wyrażeń
@@ -331,6 +337,8 @@ prepareTests(osemka,T):-
       testOsemki([1,4,2,o,6,3,7,8,5],9),
       testOsemki([o,4,2,1,8,7,3,6,5],10)
     ].
+prepareTests(wiez,T):-
+  testyWiezowcowe(T).
 prepareTests(nono, T) :-
     T = [
         (dane(autko,R1,C1),nono(R1,C1,[B1|BB1]),rysuj(autko,[B1|BB1]),B1=[0,0,0,1|_]),
@@ -341,7 +349,7 @@ prepareTests(nono, T) :-
         %(dane(konik,R6,C6),nono(R6,C6,[B6|BB6]),rysuj(konik,[B6|BB6])),
         %(dane(wazka,R7,C7),nono(R7,C7,[B7|BB7]),rysuj(wazka,[B7|BB7]))
         ].
-prepareTests(gwiez, T) :-
+prepareTests(wiez2, T) :-
   T = [
       ( wiezowce(4, [ (2, 2), (1, 3), (2, 2), (3, 1)], [ (2, 2), (3, 2), (1, 2), (4, 1)], R1), !, dobreWiezowce(R1, [ (2, 2), (1, 3), (2, 2), (3, 1)], [ (2, 2), (3, 2), (1, 2), (4, 1)])),
       ( wiezowce(4, [ (3, 1), (1, 3), (3, 2), (2, 3)], [ (2, 2), (2, 1), (3, 2), (1, 3)], R2), !, dobreWiezowce(R2, [ (3, 1), (1, 3), (3, 2), (2, 3)], [ (2, 2), (2, 1), (3, 2), (1, 3)])),
@@ -453,7 +461,6 @@ prepareTests(simp2,T):-
       simp2Test(x-(x+x+x)+(-x-x)-(-x-x-x-x),1),
       simp2Test(x*y -y*x, 1),
       simp2Test(x*(1+x+3) - (2+1+x) * x,1),
-
       %Pawel Florczuk
       simp2Test(3 * (x+2) * y - 3 * y * x, 3),
       simp2Test(x + 2 - x, 1),
@@ -550,7 +557,6 @@ prepareTests(mgci, T) :-
       mgci(f(A,B), f(B,A), f(1,2)),
       mgci(f(X), X, f(_))
   ].
-
 prepareTests(term_eq, T) :-
   T =
   [
@@ -695,6 +701,17 @@ robWiezowce(N,Plansza,Wiersze,Kolumny):-
   zgodne(Wiersze,Plansza),
   transpone(Plansza,PT),
   zgodne(Kolumny,PT).
+testyWiezowcowe(T) :-
+T=
+[
+  ( wiezowce(4, [ (2, 2), (1, 3), (2, 2), (3, 1)], [ (2, 2), (3, 2), (1, 2), (4, 1)], R1), dobreWiezowce(R1, [ (2, 2), (1, 3), (2, 2), (3, 1)], [ (2, 2), (3, 2), (1, 2), (4, 1)])),
+  ( wiezowce(4, [ (3, 1), (1, 3), (3, 2), (2, 3)], [ (2, 2), (2, 1), (3, 2), (1, 3)], R2), dobreWiezowce(R2, [ (3, 1), (1, 3), (3, 2), (2, 3)], [ (2, 2), (2, 1), (3, 2), (1, 3)])),
+  ( wiezowce(5, [ (1, 3), (3, 2), (2, 3), (4, 1), (3, 2)], [ (1, 3), (3, 2), (2, 3), (4, 1), (3, 2)], R3), dobreWiezowce(R3, [ (1, 3), (3, 2), (2, 3), (4, 1), (3, 2)], [ (1, 3), (3, 2), (2, 3), (4, 1), (3, 2)])),
+  ( wiezowce(5, [ (2, 2), (1, 4), (2, 3), (2, 2), (3, 1)], [ (2, 3), (3, 3), (1, 4), (2, 2), (2, 1)], R5), dobreWiezowce(R5, [ (2, 2), (1, 4), (2, 3), (2, 2), (3, 1)], [ (2, 3), (3, 3), (1, 4), (2, 2), (2, 1)])),
+  ( wiezowce(5, [ (2, 2), (2, 2), (3, 1), (1, 3), (3, 2)], [ (3, 2), (1, 2), (4, 1), (2, 3), (2, 2)], R6), dobreWiezowce(R6, [ (2, 2), (2, 2), (3, 1), (1, 3), (3, 2)], [ (3, 2), (1, 2), (4, 1), (2, 3), (2, 2)])),
+  ( wiezowce(6, [ (1, 3), (2, 4), (3, 1), (3, 2), (3, 3), (2, 3)], [ (1, 2), (2, 4), (4, 1), (3, 2), (2, 2), (2, 3)], R7), dobreWiezowce(R7,[ (1, 3), (2, 4), (3, 1), (3, 2), (3, 3), (2, 3)], [ (1, 2), (2, 4), (4, 1), (3, 2), (2, 2), (2, 3)])),
+  ( wiezowce(6, [ (2, 1), (3, 2), (2, 2), (2, 4), (1, 3), (2, 3)], [ (2, 2), (3, 3), (4, 1), (3, 2), (2, 3), (1, 3)], R8), dobreWiezowce(R8,[ (2, 1), (3, 2), (2, 2), (2, 4), (1, 3), (2, 3)], [ (2, 2), (3, 3), (4, 1), (3, 2), (2, 3), (1, 3)]))
+].
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % zadanie res: REZOLUCJA
 proofOf(axiom(C),C).
@@ -780,19 +797,18 @@ nonoExtra(Name) :-
   nono(R,C,B),
   rysuj(Name,B).
 %-------------------------------------------------
-
 %-------------------------------------------------
 :- nl.
-:- write(' Wersja testow z 3 czerwca 2015'), nl.
+:- write(' Wersja testow z 10 czerwca 2015'), nl.
 :- write(' W kartotece, w ktorej uruchamia sie program powinny znajdowac sie pliki '), nl.
 :- write('  P1: sum_list.pl, occur.pl, mysort.pl, multiset.pl, term'), nl.
 :- write('  P2: simp, inference, multiset2, bubsort, connected'), nl.
 :- write('  P3: game.pl, jars.pl, sat.pl, war.pl, simp2'), nl,nl.
 :- write('  P4: res, osemka, aryt, queens, nono'), nl,nl.
-:- write('  P5: term_eq, mgci  (wiezowce sie pojawia wkrotce)'), nl,nl.
+:- write('  P5: term_eq, mgci, wiez1, wiez2 '), nl,nl.
 :- write(' Uruchamianie: evaluate(lista nazw rozwiazanych zadan)'),nl.
 :- write('  np: evaluate([jars, war, sat, game, simp2])'),nl,nl.
-:- write('  UWAGA: nono pojawi się jeszcze jako nono2 z dodatkowymi testami na kolejnej liście'),nl.
-:- write('  UWAGA: simp2 jest poprawiony i ma testy studentów'),nl.
-:- write('  UWAGA: po dodaniu testów stud. simp2 ma potencjalnie korzystniejszą punktację'),nl.
-:- write('  UWAGA: każdy test jest wykonywany 3 razy'),nl.
+%:- write('  UWAGA: nono pojawi się jeszcze jako nono2 z dodatkowymi testami na kolejnej liście'),nl.
+%:- write('  UWAGA: simp2 jest poprawiony i ma testy studentów'),nl.
+%:- write('  UWAGA: po dodaniu testów stud. simp2 ma potencjalnie korzystniejszą punktację'),nl.
+%:- write('  UWAGA: każdy test jest wykonywany 3 razy'),nl.
