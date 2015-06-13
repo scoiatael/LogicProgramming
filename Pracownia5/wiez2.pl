@@ -30,7 +30,7 @@ wiezowce(N, Rows, Cols, Sq) :-
   row_constraints(Sq, Rows),
   transpose(Sq, TSq),
   row_constraints(TSq, Cols),
-  labeling([ff, bisect], Vars).
+  label(Vars).
 
 n_square(N, Sq) :-
   length(Sq, N),
